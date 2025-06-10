@@ -1,0 +1,91 @@
+.home-container {
+    padding: 3rem 1rem;
+    text-align: center;
+    font-family: sans-serif;
+    background-color: #f9fafb;
+  }
+  
+  /* 로고 */
+  .logo {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #6366f1;
+    margin-bottom: 0.5rem;
+  }
+  
+  /* 문구 */
+  .slogan {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.2rem;
+  }
+  
+  .desc {
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 2rem;
+  }
+  
+  /* 카드 이미지 묶음 */
+  .card-wrapper {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;  /* 화면 작을 때 줄바꿈 */
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    max-width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* 이미지 스타일 */
+  .card-wrapper img {
+    height: 350px;
+    width: 220px;  /* ✅ 고정 너비 */
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease;
+  }
+  
+  .card-wrapper img:hover {
+    transform: scale(1.03);
+  }
+  
+  /* 로그인/회원가입 링크 */
+  .nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+  }
+  
+  .nav-links a {
+    font-weight: 600;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    color: #333;
+    background-color: #fff;
+    transition: 0.2s ease;
+  }
+  
+  .nav-links a.join {
+    background-color: #6366f1;
+    color: white;
+    border: none;
+  }
+  
+  .nav-links a:hover {
+    opacity: 0.85;
+  }
+
+  /* 상단 헤더 */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1000px;
+    margin: 0 auto;
+    padding-bottom: 1.5rem;
+  }
