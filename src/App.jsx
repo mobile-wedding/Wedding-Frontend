@@ -14,9 +14,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/invitation/preview/:invitationId" element={<InvitationPreview />} />
         <Route path="/invitation/:id" element={<InvitationDetail />} />
         <Route path="/invitation" element={<Invitation />} />
-        <Route path="/invitation/preview" element={<InvitationPreview />} />
+        
       </Routes>
     </BrowserRouter>
   );
