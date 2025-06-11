@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import MapEmbed from '../components/MapEmbed';
-import QRCode from 'react-qr-code';          // ← 추가
-
+import QRCode from 'react-qr-code';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 /* ─────────────────────────  작은 카운트다운 박스  ───────────────────────── */
 function CountdownItem({ label, value }) {
@@ -34,17 +34,15 @@ function buildCalendarMatrix(dateObj) {
   const m = dateObj.getMonth();
   const first = new Date(y, m, 1);
   const daysInMonth = new Date(y, m + 1, 0).getDate();
-  const start = first.getDay(); // 0(Sun)-6(Sat)
+  const start = first.getDay();
 
   const matrix = [];
   let week = new Array(7).fill(null);
   let d = 1;
 
-  // 1주 차
   for (let i = start; i < 7; i++) week[i] = d++;
   matrix.push(week);
 
-  // 나머지 주
   while (d <= daysInMonth) {
     week = new Array(7).fill(null);
     for (let i = 0; i < 7 && d <= daysInMonth; i++) week[i] = d++;
@@ -55,49 +53,89 @@ function buildCalendarMatrix(dateObj) {
 
 /* ─────────────────────────────  메인 컴포넌트  ──────────────────────────── */
 export default function InvitationPreview() {
-  const { state } = useLocation();
+  const { invitationId } = useParams();
+  const [data, setData] = useState(null);
+  const [photos, setPhotos] = useState([]);
   const [showShare, setShowShare] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [countdown, setCountdown] = useState(null);
   const shareUrl = window.location.href;
-  const {
-    groomName,
-    brideName,
-    date: weddingDateStr,
-    location,
-    photos = [],
-    message,
-  } = state || {};
 
-  /* 날짜·D-Day 로직 ----------------------------------------------------- */
-  const weddingDate = weddingDateStr ? new Date(weddingDateStr) : null;
-  const weekDay = weddingDate?.toLocaleDateString('ko-KR', { weekday: 'long' }).toUpperCase();
-  const ymd = weddingDate?.toISOString().split('T')[0].replace(/-/g, '.');
-
-  const diffLeft = () => {
-    if (!weddingDate) return null;
-    const diff = weddingDate - new Date();
-    return {
-      days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))),
-      hours: Math.max(0, Math.floor((diff / (1000 * 60 * 60)) % 24)),
-      minutes: Math.max(0, Math.floor((diff / (1000 * 60)) % 60)),
-      seconds: Math.max(0, Math.floor((diff / 1000) % 60)),
-    };
-  };
-  const [left, setLeft] = useState(diffLeft());
+  // 데이터 페칭
   useEffect(() => {
-    if (!weddingDate) return;
-    const id = setInterval(() => setLeft(diffLeft()), 1_000);
-    return () => clearInterval(id);
-  }, [weddingDateStr]);
+    let mounted = true;
 
-  /* 월별 캘린더 매트릭스 (memo) --------------------------------------- */
-  const calendar = useMemo(
-    () => (weddingDate ? buildCalendarMatrix(weddingDate) : []),
-    [weddingDateStr]
-  );
+    const fetchData = async () => {
+      if (!invitationId) return;
+      
+      setIsLoading(true);
+      try {
+        const [invRes, photoRes] = await Promise.all([
+          axios.get(`http://localhost:8000/api/invitation/${invitationId}`),
+          axios.get(`http://localhost:8000/api/photo/photo/${invitationId}`)
+        ]);
+        
+        if (mounted) {
+          setData(invRes.data);
+          setPhotos(photoRes.data.map(p => p.photo_url));
+        }
+      } catch (err) {
+        console.error('❌ 불러오기 실패!');
+        console.error('에러 메시지:', err.message);
+        console.error('응답 상태 코드:', err.response?.status);
+        console.error('실패한 요청 URL:', err.config?.url);
+        console.error('전체 에러 객체:', err);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    };
 
-  /* 사진 분할 ---------------------------------------------------------- */
-  const main = photos[0];
-  const gallery = photos.slice(1);
+    fetchData();
+    
+
+    return () => {
+      mounted = false;
+    };
+  }, [invitationId]);
+
+  // 카운트다운 로직
+  useEffect(() => {
+    if (!data?.wedding_date) return;
+
+    const weddingDate = new Date(data.wedding_date);
+    
+    const updateCountdown = () => {
+      const diff = weddingDate - new Date();
+      setCountdown({
+        days: Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24))),
+        hours: Math.max(0, Math.floor((diff / (1000 * 60 * 60)) % 24)),
+        minutes: Math.max(0, Math.floor((diff / (1000 * 60)) % 60)),
+        seconds: Math.max(0, Math.floor((diff / 1000) % 60)),
+      });
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+
+    return () => clearInterval(interval);
+  }, [data?.wedding_date]);
+
+  // 날짜 관련 계산
+  const weddingDate = useMemo(() => data?.wedding_date ? new Date(data.wedding_date) : null, [data?.wedding_date]);
+  const weekDay = useMemo(() => weddingDate?.toLocaleDateString('ko-KR', { weekday: 'long' }).toUpperCase(), [weddingDate]);
+  const ymd = useMemo(() => weddingDate?.toISOString().split('T')[0].replace(/-/g, '.'), [weddingDate]);
+  const calendar = useMemo(() => weddingDate ? buildCalendarMatrix(weddingDate) : [], [weddingDate]);
+
+  // 사진 분할
+  const main = useMemo(() => Array.isArray(photos) && photos.length > 0 ? photos[0] : null, [photos]);
+  const gallery = useMemo(() => Array.isArray(photos) && photos.length > 1 ? photos.slice(1) : [], [photos]);
+
+  if (isLoading) return <p>로딩 중...</p>;
+  if (!data) return <p>데이터를 불러올 수 없습니다.</p>;
+
+  const { groom_name, bride_name, location, message } = data;
   const section = { margin: '3rem 0', textAlign: 'center' };
 
   return (
@@ -118,7 +156,7 @@ export default function InvitationPreview() {
       {/* 2) 인사말 */}
       <section style={section}>
         <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>
-          {groomName} | {brideName}
+          {groom_name} | {bride_name}
         </h2>
         <p style={{ whiteSpace: 'pre-line', lineHeight: 1.6 }}>
           {message ||
@@ -190,7 +228,7 @@ export default function InvitationPreview() {
         )}
 
         {/* ▶ D-Day 카운트다운 ◀ */}
-        {left && (
+        {countdown && (
           <div
             style={{
               display: 'flex',
@@ -199,15 +237,15 @@ export default function InvitationPreview() {
               marginTop: '1rem',
             }}
           >
-            <CountdownItem label="DAYS" value={left.days} />
-            <CountdownItem label="HOUR" value={left.hours} />
-            <CountdownItem label="MIN" value={left.minutes} />
-            <CountdownItem label="SEC" value={left.seconds} />
+            <CountdownItem label="DAYS" value={countdown.days} />
+            <CountdownItem label="HOUR" value={countdown.hours} />
+            <CountdownItem label="MIN" value={countdown.minutes} />
+            <CountdownItem label="SEC" value={countdown.seconds} />
           </div>
         )}
 
         <p style={{ marginTop: '1.25rem', fontSize: '0.8rem' }}>
-          {groomName} ♥ {brideName}의 결혼식이 {left?.days ?? 0}일 남았습니다.
+          {groom_name} ♥ {bride_name}의 결혼식이 {countdown?.days ?? 0}일 남았습니다.
         </p>
       </section>
 
@@ -240,75 +278,75 @@ export default function InvitationPreview() {
 
       {/* 5) 오시는 길 */}
       <section style={section}>
-  <h3 style={{ marginBottom: '1rem', fontSize: '0.9rem', letterSpacing: 2 }}>
-    LOCATION
-    <br />
-    오시는 길
-  </h3>
-  <p style={{ marginBottom: '1rem' }}>{location}</p>
+        <h3 style={{ marginBottom: '1rem', fontSize: '0.9rem', letterSpacing: 2 }}>
+          LOCATION
+          <br />
+          오시는 길
+        </h3>
+        <p style={{ marginBottom: '1rem' }}>{location}</p>
 
-  <MapEmbed address={location} />
-</section>
+        <MapEmbed address={location} />
+      </section>
 
-{/* 6) 공유하기 --------------------------------------------------- */}
-<section style={{ ...section, marginBottom: '4rem' }}>
-  <button
-    onClick={() => setShowShare(!showShare)}
-    style={{
-      padding: '0.75rem 1.5rem',
-      fontSize: '1rem',
-      borderRadius: '8px',
-      background: '#333',
-      color: '#fff',
-      border: 'none',
-      cursor: 'pointer',
-    }}
-  >
-    공유하기
-  </button>
+      {/* 6) 공유하기 --------------------------------------------------- */}
+      <section style={{ ...section, marginBottom: '4rem' }}>
+        <button
+          onClick={() => setShowShare(!showShare)}
+          style={{
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            borderRadius: '8px',
+            background: '#333',
+            color: '#fff',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          공유하기
+        </button>
 
-  {showShare && (
-    <div
-      style={{
-        marginTop: '1.5rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        gap: '1rem',
-      }}
-    >
-      {/* URL 복사용 입력창 */}
-      <input
-        readOnly
-        value={shareUrl}
-        onClick={(e) => e.target.select()}
-        style={{
-          width: '100%',
-          padding: '0.5rem',
-          border: '1px solid #ccc',
-          borderRadius: '6px',
-          fontSize: '0.9rem',
-        }}
-      />
+        {showShare && (
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '1rem',
+            }}
+          >
+            {/* URL 복사용 입력창 */}
+            <input
+              readOnly
+              value={shareUrl}
+              onClick={(e) => e.target.select()}
+              style={{
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ccc',
+                borderRadius: '6px',
+                fontSize: '0.9rem',
+              }}
+            />
 
-      {/* QR 코드 */}
-      <QRCode value={shareUrl} size={180} />
+            {/* QR 코드 */}
+            <QRCode value={shareUrl} size={180} />
 
-      <button
-        onClick={() => setShowShare(false)}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          color: '#888',
-          cursor: 'pointer',
-          marginTop: '0.5rem',
-        }}
-      >
-        닫기
-      </button>
-    </div>
-  )}
-</section>
+            <button
+              onClick={() => setShowShare(false)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#888',
+                cursor: 'pointer',
+                marginTop: '0.5rem',
+              }}
+            >
+              닫기
+            </button>
+          </div>
+        )}
+      </section>
     </div>
   );
 }

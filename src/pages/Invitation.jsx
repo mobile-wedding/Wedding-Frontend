@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './invitation.css';
+import axios from 'axios';
 
 export default function CreateInvitation() {
   const [groomName, setGroomName] = useState('');
@@ -16,16 +17,46 @@ export default function CreateInvitation() {
     setPhotos(files);
   };
 
-  const handlePreview = () => {
-    navigate('/invitation/preview', {
-      state: {
-        groomName,
-        brideName,
-        date,
-        location,
-        photos: photos.map(file => URL.createObjectURL(file))
-      }
-    });
+  const handlePreview = async () => {
+    const userId = localStorage.getItem('user_id');
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    try {
+      // 1. invitation 먼저 생성
+      const res = await axios.post(`http://localhost:8000/api/invitation/${userId}`, {
+        groom_name: groomName,
+        bride_name: brideName,
+        wedding_date: new Date(date).toISOString(),
+        location: location,
+        message: '',
+      });
+  
+      const invitationId = res.data.id;
+  
+      // 2. 사진 업로드
+      const formData = new FormData();
+      formData.append('invitation_id', invitationId);
+      photos.forEach(file => formData.append('files', file));
+  
+      await axios.post('http://localhost:8000/api/photo/photo/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+  
+      // 3. 스타일 태깅
+      await axios.post(`http://localhost:8000/api/photo/classify/${invitationId}`);
+  
+      // 4. 사진 레이아웃 배치
+      await axios.post(`http://localhost:8000/api/photo/photo/layout/${invitationId}`);
+  
+      // 5. 청첩장 결과 보기 화면으로 이동
+      navigate(`/invitation/preview/${invitationId}`);
+  
+    } catch (err) {
+      console.error(err);
+      alert('청첩장 생성 중 오류가 발생했습니다.');
+    }
   };
 
   return (
