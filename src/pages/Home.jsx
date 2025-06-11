@@ -4,6 +4,13 @@ import './Home.css';
 
 export default function Home() {
   const navigate = useNavigate();
+  const isLoggedIn = localStorage.getItem('user_id');
+
+  const handleLogout = () => {
+    localStorage.removeItem('user_id');
+    localStorage.removeItem('email');
+    navigate('/');
+  };
 
   const handleViewSample = (cardId) => {
     navigate(`/invitation/${cardId}`);
@@ -25,8 +32,17 @@ export default function Home() {
       <header className="header">
         <h1 className="logo">Girit</h1>
         <nav className="nav-links">
-          <a href="/login">로그인</a>
-          <a href="/signup" className="join">회원가입</a>
+          {isLoggedIn ? (
+            <>
+            <span className="user-email">{localStorage.getItem('email')}님</span>
+            <button onClick={handleLogout} className="logout-btn">로그아웃</button>
+          </>
+          ) : (
+            <>
+              <a href="/login">로그인</a>
+              <a href="/signup" className="join">회원가입</a>
+            </>
+          )}
         </nav>
       </header>
 
