@@ -6,6 +6,7 @@ import SignUp from './pages/SignUp';
 import InvitationDetail from './pages/InvitationDetail';
 import Invitation from './pages/Invitation';
 import InvitationPreview from './pages/InvitationPreview';
+import InvitationSecurityGate from './pages/InvitationSecurityGate';
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
         <Route path="/invitation/preview/:invitationId" element={<InvitationPreview />} />
         <Route path="/invitation/:id" element={<InvitationDetail />} />
         <Route path="/invitation" element={<Invitation />} />
-        
+        <Route path="/invitation/secure/:invitationId" element={<InvitationSecurityGate />} />
       </Routes>
     </BrowserRouter>
   );
