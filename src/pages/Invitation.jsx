@@ -32,8 +32,10 @@ export default function CreateInvitation() {
         location: location,
         message: '',
       });
-  
+
       const invitationId = res.data.id;
+      const securityCode = res.data.security_code; // ✅ 보안코드 추출
+      alert(`이 보안 코드는 복사해주세요:)\n초대장 보안코드: ${securityCode}`);     // ✅ 사용자에게 보여주기
   
       // 2. 사진 업로드
       const formData = new FormData();

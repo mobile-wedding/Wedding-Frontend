@@ -3,6 +3,7 @@ import MapEmbed from '../components/MapEmbed';
 import QRCode from 'react-qr-code';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 /* ─────────────────────────  작은 카운트다운 박스  ───────────────────────── */
 function CountdownItem({ label, value }) {
@@ -60,10 +61,19 @@ export default function InvitationPreview() {
   const [isLoading, setIsLoading] = useState(true);
   const [countdown, setCountdown] = useState(null);
   const shareUrl = window.location.href;
+  const navigate = useNavigate();
 
+
+  useEffect(() => {
+    const verified = localStorage.getItem(`verified_${invitationId}`);
+    if (!verified) {
+      navigate(`/invitation/secure/${invitationId}`);
+    }
+  }, [invitationId, navigate]);
   // 데이터 페칭
   useEffect(() => {
     let mounted = true;
+    
 
     const fetchData = async () => {
       if (!invitationId) return;
