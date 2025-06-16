@@ -43,9 +43,9 @@ export default function Home() {
 
         <div className="hero-text">
           <h2 className="headline">
-            결제하지 마세요!<br />
-            먼저, 무료 시안 만들어보고<br />
-            마음에 드시면 구매하세요.
+            사진만 넣어보세요!<br />
+            AI가 사진을 자동 분류해주고<br />
+            자동 배치해줘요!
           </h2>
 
           <p className="subline">
