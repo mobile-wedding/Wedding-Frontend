@@ -5,58 +5,71 @@ import './InvitationDetail.css';
 export default function InvitationDetail() {
   const { id } = useParams();
   const sectionRefs = useRef([]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [active, setActive] = useState(0);
 
-  const descriptions = [
-    { title: '01. 커버', text: '청첩장을 열면 가장 먼저 보이는 메인 이미지입니다.\n단정한 웨딩 사진 한 장으로 우리의 시작을 알리고,\n하객분들께 따뜻한 첫인사를 전합니다.' },
-    { title: '02. 결혼 일정', text: '결혼식 일정, 그리고 디데이를 담은 화면입니다.\n초대의 의미와 기다림의 설렘을 함께 전합니다.' },
-    { title: '03. 갤러리', text: '함께한 순간들을 사진으로 담아\n여러분과 나누고 싶습니다.\n설렘과 미소가 가득했던 그날의 추억을\n소중한 분들과 함께 감상해주세요.'},
-    { title: '04. 결혼식장', text: '저희의 특별한 날에\n함께해주실 소중한 분들을 위해\n예식장 위치를 안내드립니다.\n편안하게 찾아오실 수 있도록\n정성을 다해 준비하겠습니다.'}]
+  const texts = [
+    {
+      title: '01. 커버',
+      text: `청첩장을 열면 가장 먼저 보이는 메인 이미지입니다.\n단정한 웨딩 사진 한 장으로 우리의 시작을 알리고,\n하객분들께 따뜻한 첫인사를 전합니다.`,
+    },
+    {
+      title: '02. 결혼 일정',
+      text: `결혼식 일정, 그리고 디데이를 담은 화면입니다.\n초대의 의미와 기다림의 설렘을 함께 전합니다.`,
+    },
+    {
+      title: '03. 갤러리',
+      text: `함께한 순간들을 사진으로 담아 여러분과 나누고 싶습니다.\n설렘과 미소가 가득했던 그날의 추억을 소중한 분들과 감상해주세요.`,
+    },
+    {
+      title: '04. 결혼식장',
+      text: `저희의 특별한 날에 함께해주실 소중한 분들을 위해\n예식장 위치를 안내드립니다.\n편안하게 찾아오실 수 있도록 정성을 다해 준비하겠습니다.`,
+    },
+  ];
 
+  /*  IntersectionObserver → active 인덱스 업데이트  */
   useEffect(() => {
-    const observer = new IntersectionObserver(
+    const io = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = sectionRefs.current.findIndex((el) => el === entry.target);
-            if (idx !== -1) setActiveIndex(idx);
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            const idx = sectionRefs.current.indexOf(e.target);
+            if (idx !== -1) setActive(idx);
           }
         });
       },
-      { threshold: 0.6 }
+      { threshold: 0.5 }
     );
-
-    sectionRefs.current.forEach((el) => el && observer.observe(el));
-
-    return () => observer.disconnect();
+    sectionRefs.current.forEach((el) => el && io.observe(el));
+    return () => io.disconnect();
   }, []);
 
   return (
-    <div className="invitation-detail-container">
-      <div className="invitation-scroll-wrapper">
-        {/* 왼쪽: 스크롤되는 청첩장 이미지 */}
-        <div className="invitation-preview">
-          <div ref={(el) => (sectionRefs.current[0] = el)}>
-            <img src={`/cards/${id}_1.png`} alt={`${id}`} className="invitation-image" />
-          </div>
-          <div ref={(el) => (sectionRefs.current[1] = el)}>
-            <img src={`/cards/${id}_2.png`} alt={`${id}-page2`} className="invitation-image" />
-          </div>
-          <div ref={(el) => (sectionRefs.current[2] = el)}>
-            <img src={`/cards/${id}_3.png`} alt={`${id}-page3`} className="invitation-image" />
-          </div>
-          <div ref={(el) => (sectionRefs.current[3] = el)}>
-            <img src={`/cards/${id}_4.png`} alt={`${id}-page4`} className="invitation-image" />
-          </div>
+    <div className="detail-root">
+      <div className="detail-wrapper">
+        {/* ---------- 이미지 스크롤 영역 ---------- */}
+        <div className="preview-col">
+          {[1, 2, 3, 4].map((n, i) => (
+            <figure
+              key={n}
+              ref={(el) => (sectionRefs.current[i] = el)}
+              className="snap-item"
+            >
+              <img
+                src={`/cards/${id}_${n}.png`}
+                alt={`${id}-page${n}`}
+                className="inv-img"
+              />
+            </figure>
+          ))}
         </div>
 
-        {/* 오른쪽: 각 페이지 설명 */}
-        <div className="invitation-description">
-          <div className="desc-section">
-            <h3>{descriptions[activeIndex].title}</h3>
-            <p>{descriptions[activeIndex].text}</p>
-          </div>
-        </div>
+        {/* ---------- 설명 ---------- */}
+        <aside className="desc-col">
+          <h3>{texts[active].title}</h3>
+          {texts[active].text.split('\n').map((line, i) => (
+            <p key={i}>{line}</p>
+          ))}
+        </aside>
       </div>
     </div>
   );
