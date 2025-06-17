@@ -184,6 +184,16 @@ export default function InvitationPreview() {
         </p>
       </section>
 
+      {/* 2) 인사말 아래 계좌 정보 */}
+      {data.bank_name && data.account&& (
+      <section style={section}>
+        <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>마음 전하실 곳</h3>
+        <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>
+        💌 {data.bank_name} {data.account}
+        </p>
+        </section>
+      )}
+
       {/* 3) 캘린더 + 카운트다운 */}
       <section style={section}>
         <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{ymd}</h3>

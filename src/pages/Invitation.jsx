@@ -47,6 +47,8 @@ export default function CreateInvitation() {
           wedding_date: data.date.toISOString(),
           location: data.place,
           message: '',
+          bank_name: data.bank_name,        
+          account: data.account,
         }
       );
       const { id, security_code } = invRes.data;
@@ -104,6 +106,23 @@ export default function CreateInvitation() {
                   onChange={(d) => setValue('date', d)}
                   dateFormat="yyyy.MM.dd"
                 />
+                
+                {/* 은행명 + 계좌번호 */}
+                <label>계좌 정보</label>
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '1rem' }}>
+                 <input
+                   type="text"
+                   placeholder="은행명 (예: 국민은행)"
+                   {...register('bank_name')}
+                   style={{ flex: 1 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="계좌번호 (예: 123456-78-123456)"
+                    {...register('account')}
+                    style={{ flex: 2 }}
+                    />
+                  </div>
 
                 <label>예식 장소</label>
                 <input {...register('place', { required: true })} />
