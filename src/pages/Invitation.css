@@ -1,94 +1,137 @@
-.create-invitation-wrapper {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #f3f4f6;
-  padding: 1rem;
-}
+  /* ===== 레이아웃 ===== */
+  .wizard-root {
+    padding: 2.5rem 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 4rem;
+    font-family: 'Pretendard', system-ui, sans-serif;
+  }
+  @media (max-width: 900px) {
+    .wizard-root { grid-template-columns: 1fr; }
+  }
 
-.create-invitation-container {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 600px;
-}
+  /* ===== 진행 점 ===== */
+  .stepper { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    border: 2px solid #ccc;
+  }
+  .dot.on { background: var(--violet); border-color: transparent; }
 
-.create-invitation-container h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #1f2937;
-}
+  /* ===== 드롭존 ===== */
+  .dropbox {
+    border: 2px dashed #ccc; border-radius: 12px;
+    padding: 2rem; text-align: center; color:#777; transition: .25s;
+  }
+  .dropbox.on { border-color: var(--violet); background: #f9f9ff; }
 
-.form-group {
-  margin-bottom: 1.5rem;
-}
+  /* 썸네일 그리드 */
+  .thumb-row { display: flex; gap: .5rem; margin-top: 1rem; flex-wrap: wrap; }
+  .thumb-row img {
+    width: 72px; height: 72px; object-fit: cover; border-radius: 8px;
+    cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.1);
+  }
 
-.form-group label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0.5rem;
-}
+  /* ===== 버튼 ===== */
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center;
+    padding: 10px 24px; font-weight:600; border-radius:8px; cursor:pointer;
+    border:none; transition:.2s;
+  }
+  .btn.primary { background: var(--violet); color:#fff; }
+  .btn.primary:hover { background: var(--violet-dark); }
+  .btn.ghost { background:#fff; border:1px solid #ddd; color:#333; }
+  .btn.ghost:hover { background:#f6f6f6; }
 
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 0.75rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
+  .nav-btns { display:flex; gap:1rem; margin-top:2rem; }
 
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-}
+  /* index.css 또는 CreateInvitation.css 에 추가 */
+  .react-datepicker {
+    font-family: 'Pretendard', sans-serif;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    border-radius: 12px;
+  }
 
-.button-group {
-  display: flex;
-  gap: 1rem;
-  margin-top: 2rem;
-}
+  .react-datepicker__header {
+    background: var(--violet);
+    color: #fff;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+  }
 
-.preview-btn {
-  flex: 1;
-  padding: 0.75rem;
-  background-color: #6366f1;
-  color: white;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+  .react-datepicker__current-month,
+  .react-datepicker-time__header {
+    font-weight: 700;
+  }
 
-.preview-btn:hover {
-  background-color: #4f46e5;
-}
+  .react-datepicker__day--selected,
+  .react-datepicker__day--keyboard-selected {
+    background: var(--violet) !important;
+    color: #fff;
+  }
 
-.cancel-btn {
-  flex: 1;
-  padding: 0.75rem;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
+  /* 이미 있는 내용들 … */
 
-.cancel-btn:hover {
-  background-color: #e5e7eb;
-}
+  .wizard-root.single{
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;   /* 가로 중앙 */
+    align-items: center;       /* 🔸세로 중앙 (flex-start → center) */
+    padding-top: 0;            /* 필요 없으면 0으로 */
+    background: var(--gray-100);
+  }
+
+  /* 👉 새로 추가: form-pane을 감싸는 래퍼를 중앙 정렬 */
+  .frame-wrap{
+    width: 100%;
+    display: flex;
+    justify-content: center;   /* 중앙 */
+  }
+
+  /* ===== 박스 자체 ===== */
+  .form-pane{
+    width: 100%;
+    max-width: 1000px;
+    max-height: 1000px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 18px;
+    padding: 3rem 2.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  }
+
+  /* 1️⃣ form 자체를 column 배치로 */
+  .form-pane form{
+    display: flex;
+    flex-direction: column;   /* 세로 스택 */
+    gap: 1rem;                /* 필드 사이 여백 */
+  }
+
+  /* 2️⃣ label 은 블록, input 은 100% */
+  .form-pane label{
+    display: block;
+    font-weight: 600;
+    font-size: .9rem;
+  }
+
+  .form-pane input:not([type="submit"]),
+  .react-datepicker-wrapper input {
+    width: 100%;
+    height: 48px;
+    font-size: 1rem;
+    line-height: 48px;
+    padding: 0 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+  }
+  
+  .form-pane input:focus,
+  .react-datepicker-wrapper input:focus {
+    border-color: var(--violet);
+    outline: none;
+  }

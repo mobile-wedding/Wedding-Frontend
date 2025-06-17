@@ -1,100 +1,170 @@
-// src/pages/CreateInvitation.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './invitation.css';
+import { useForm } from 'react-hook-form';
+import DatePicker from 'react-datepicker';
+import { format } from 'date-fns';
+import Dropzone from 'react-dropzone';
+import cls from 'classnames';
 import axios from 'axios';
+import 'react-datepicker/dist/react-datepicker.css';
+import { ko } from 'date-fns/locale';
+
+import './Invitation.css';
 
 export default function CreateInvitation() {
-  const [groomName, setGroomName] = useState('');
-  const [brideName, setBrideName] = useState('');
-  const [date, setDate] = useState('');
-  const [location, setLocation] = useState('');
+  const nav = useNavigate();
+  const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState([]);
-  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      groom: '',
+      bride: '',
+      date: new Date(),
+      place: '',
+    },
+  });
 
-  const handlePhotoChange = (e) => {
-    const files = Array.from(e.target.files);
-    setPhotos(files);
-  };
+  const onDrop = (files) => setPhotos((prev) => [...prev, ...files]);
 
-  const handlePreview = async () => {
-    const userId = localStorage.getItem('user_id');
-    if (!userId) {
-      alert('로그인이 필요합니다.');
-      return;
-    }
+  /* ---------------- Submit ---------------- */
+  const onSubmit = async (data) => {
+    if (step !== 2) return setStep(step + 1); // 1→2, 2→3(제출)
+
     try {
-      // 1. invitation 먼저 생성
-      const res = await axios.post(`http://localhost:8000/api/invitation/${userId}`, {
-        groom_name: groomName,
-        bride_name: brideName,
-        wedding_date: new Date(date).toISOString(),
-        location: location,
-        message: '',
-      });
+      /* 1) 초대장 생성 */
+      const uid = localStorage.getItem('user_id');
+      const invRes = await axios.post(
+        `http://localhost:8000/api/invitation/${uid}`,
+        {
+          groom_name: data.groom,
+          bride_name: data.bride,
+          wedding_date: data.date.toISOString(),
+          location: data.place,
+          message: '',
+        }
+      );
+      const { id, security_code } = invRes.data;
+      alert(`보안코드 복사해주세요: ${security_code}`);
 
-      const invitationId = res.data.id;
-      const securityCode = res.data.security_code; // ✅ 보안코드 추출
-      alert(`이 보안 코드는 복사해주세요:)\n초대장 보안코드: ${securityCode}`);     // ✅ 사용자에게 보여주기
-  
-      // 2. 사진 업로드
-      const formData = new FormData();
-      formData.append('invitation_id', invitationId);
-      photos.forEach(file => formData.append('files', file));
-  
-      await axios.post('http://localhost:8000/api/photo/photo/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-  
-      // 3. 스타일 태깅
-      await axios.post(`http://localhost:8000/api/photo/classify/${invitationId}`);
-  
-      // 4. 사진 레이아웃 배치
-      await axios.post(`http://localhost:8000/api/photo/photo/layout/${invitationId}`);
-  
-      // 5. 청첩장 결과 보기 화면으로 이동
-      navigate(`/invitation/preview/${invitationId}`);
-  
-    } catch (err) {
-      console.error(err);
-      alert('청첩장 생성 중 오류가 발생했습니다.');
+      /* 2) 사진 업로드 */
+      const fd = new FormData();
+      fd.append('invitation_id', id);
+      photos.forEach((p) => fd.append('files', p));
+      await axios.post('http://localhost:8000/api/photo/photo/upload', fd);
+
+      /* 3) 스타일링 & 레이아웃 */
+      await axios.post(`http://localhost:8000/api/photo/classify/${id}`);
+      await axios.post(`http://localhost:8000/api/photo/photo/layout/${id}`);
+
+      /* 4) 미리보기 이동 */
+      nav(`/invitation/preview/${id}`);
+    } catch (e) {
+      console.error(e);
+      alert('청첩장 생성 오류 😢');
     }
   };
+
+  /* ---------------- Preview 값 ---------------- */
+  const w = watch(); // 모든 폼 값 실시간 구독
 
   return (
-    <div className="create-invitation-wrapper">
-      <div className="create-invitation-container">
-        <h2>청첩장 만들기</h2>
+    <div className="wizard-root single">
+      <div className="frame-wrap">
+        {/* 우측 : 스텝 폼 --------------------------------- */}
+        <section className="form-pane">
+          {/* 진행 바 */}
+          <div className="stepper">
+            {[1, 2, 3].map((s) => (
+              <div key={s} className={cls('dot', step >= s && 'on')} />
+            ))}
+          </div>
 
-        <div className="form-group">
-          <label>신랑 이름</label>
-          <input value={groomName} onChange={(e) => setGroomName(e.target.value)} />
-        </div>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {step === 1 && (
+              <>
+                <h2>정보 입력</h2>
+                <label>신랑 이름</label>
+                <input {...register('groom', { required: true })} />
+                {errors.groom && <span className="err">필수 입력</span>}
 
-        <div className="form-group">
-          <label>신부 이름</label>
-          <input value={brideName} onChange={(e) => setBrideName(e.target.value)} />
-        </div>
+                <label>신부 이름</label>
+                <input {...register('bride', { required: true })} />
+                {errors.bride && <span className="err">필수 입력</span>}
 
-        <div className="form-group">
-          <label>결혼 날짜</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </div>
+                <label>결혼 날짜</label>
+                <DatePicker
+                  locale={ko}
+                  selected={w.date}
+                  onChange={(d) => setValue('date', d)}
+                  dateFormat="yyyy.MM.dd"
+                />
 
-        <div className="form-group">
-          <label>예식 장소</label>
-          <input value={location} onChange={(e) => setLocation(e.target.value)} />
-        </div>
+                <label>예식 장소</label>
+                <input {...register('place', { required: true })} />
+              </>
+            )}
 
-        <div className="form-group">
-          <label>사진 업로드</label>
-          <input type="file" accept="image/*" multiple onChange={handlePhotoChange} />
-        </div>
+            {step === 2 && (
+              <>
+                <h2>부가기능</h2>
 
-        <div className="button-group">
-          <button className="preview-btn" onClick={handlePreview}>만들기</button>
-          <button className="cancel-btn" onClick={() => navigate('/')}>취소</button>
-        </div>
+                <label>사진 업로드</label>
+                <Dropzone onDrop={onDrop} accept={{ 'image/*': [] }}>
+                  {({ getRootProps, getInputProps, isDragActive }) => (
+                    <div
+                      {...getRootProps()}
+                      className={cls('dropbox', isDragActive && 'on')}
+                    >
+                      <input {...getInputProps()} />
+                      {isDragActive ? '놓으세요…' : '이미지 끌어다 놓기 / 클릭'}
+                    </div>
+                  )}
+                </Dropzone>
+
+                {/* 썸네일 프리뷰 */}
+                {photos.length > 0 && (
+                  <div className="thumb-row">
+                    {photos.map((p, i) => (
+                      <img
+                        key={i}
+                        src={URL.createObjectURL(p)}
+                        alt="t"
+                        onClick={() =>
+                          setPhotos((prev) => prev.filter((_, idx) => idx !== i))
+                        }
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <h2>제작 완료 🎉</h2>
+                <p>"만들기" 버튼을 누르면 <br />초대장을 자동으로 배치하고 미리보기를 보여 드려요.</p>
+              </>
+            )}
+
+            {/* 네비게이션 버튼 */}
+            <div className="nav-btns">
+              {step > 1 && (
+                <button type="button" className="btn ghost" onClick={() => setStep(step - 1)}>
+                  이전
+                </button>
+              )}
+              <button type="submit" className="btn primary">
+                {step === 3 ? '만들기' : '다음'}
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
     </div>
   );
