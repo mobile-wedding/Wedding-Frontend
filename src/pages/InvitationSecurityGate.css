@@ -1,0 +1,75 @@
+:root{
+    --violet:#6366f1;
+    --violet-dark:#4f46e5;
+    font-family:'Pretendard',system-ui,sans-serif;
+  }
+  .gate-root{
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#f9fafb;
+  }
+  .gate-card{
+    width:420px;
+    background:#fff;
+    border-radius:20px;
+    padding:3rem 2.5rem;
+    text-align:center;
+    box-shadow:0 12px 34px rgba(0,0,0,.08);
+  }
+  .gate-card .icon{ color:var(--violet); margin-bottom:1rem; }
+  
+  h2{ margin:0 0 1.25rem; font-size:1.25rem; }
+  p{ margin:.3rem 0 1.5rem; color:#555; font-size:.95rem; }
+  
+  .code-input{
+    width:180px;
+    margin:0 auto 1.5rem;
+    padding:.7rem 1rem;
+    text-align:center;
+    font-size:1.2rem;
+    letter-spacing:2px;
+    border:1px solid #d1d1d1;
+    border-radius:10px;
+  }
+  .code-box{
+    font-size:1.8rem;
+    font-weight:700;
+    background:#f3f4fe;
+    color:var(--violet-dark);
+    padding:.8rem 1.2rem;
+    border-radius:12px;
+    display:inline-block;
+    margin:1rem 0 2rem;
+    user-select:all;
+  }
+  
+  /* 버튼 */
+  .btn{
+    padding:.7rem 1.6rem;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:.95rem;
+  }
+  .btn.primary{
+    background:var(--violet);
+    color:#fff;
+  }
+  .btn.primary:hover{ background:var(--violet-dark); }
+  
+  /* 에러 메시지 */
+  .err{ color:#e65050; margin-top:1rem; font-size:.9rem; }
+  
+  /* 입력 오류 shake 효과 */
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%,60%{transform:translateX(-6px)}
+    40%,80%{transform:translateX(6px)}
+  }
+  .shake{ animation:shake .4s linear; }
+  
+  /* 성공 카드(보안코드 발급) 색 강조 */
+  .success .icon{ color:#22c55e; }
